@@ -74,20 +74,28 @@ export default function SimplesPage() {
     if (form.receita_total === 0) { setErro("Informe ao menos a Receita Total."); return; }
     setCarregando(true);
     setErro(null);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
     try {
       const res = await fetch(`${API}/dre/simples/calcular`, {
         method: "POST",
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error("Erro ao calcular.");
+      if (!res.ok) throw new Error(`Erro ${res.status}`);
       const resultado = await res.json();
       sessionStorage.setItem("dreSimplesResultado", JSON.stringify(resultado));
       sessionStorage.setItem("dreSimplesInput", JSON.stringify(form));
       router.push("/simples/resultado");
-    } catch {
-      setErro("Não foi possível calcular. Tente novamente.");
+    } catch (e: unknown) {
+      if ((e as Error).name === "AbortError") {
+        setErro("O servidor demorou para responder. Aguarde alguns segundos e tente novamente.");
+      } else {
+        setErro("Não foi possível calcular. Verifique sua conexão e tente novamente.");
+      }
     } finally {
+      clearTimeout(timeout);
       setCarregando(false);
     }
   };
