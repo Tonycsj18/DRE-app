@@ -4,39 +4,83 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DREInput, DadosExtraidos } from "@/types/dre";
 
-const CAMPOS_LABELS: Record<keyof DREInput, string> = {
-  receita_bruta: "Receita Bruta de Vendas",
-  devolucoes: "Devoluções",
-  abatimentos: "Abatimentos",
-  impostos_vendas: "Impostos sobre Vendas (ICMS/PIS/COFINS/ISS)",
-  estoque_inicial: "Estoque Inicial",
-  compras: "Compras / Custo de Produção",
-  estoque_final: "Estoque Final",
-  despesas_comerciais: "Despesas Comerciais",
-  despesas_administrativas: "Despesas Administrativas",
-  despesas_financeiras: "Despesas Financeiras",
-  receitas_financeiras: "Receitas Financeiras",
-  depreciacao_amortizacao: "Depreciação e Amortização",
-  resultado_nao_operacional: "Resultado Não Operacional",
-  aliquota_irpj: "Alíquota IRPJ (ex: 0.15)",
-  aliquota_csll: "Alíquota CSLL (ex: 0.09)",
-  participacoes: "Participações nos Lucros",
-};
+const SECOES = [
+  {
+    titulo: "Receita Bruta",
+    descricao: "Total faturado antes de qualquer desconto ou imposto",
+    campos: [
+      { key: "receita_bruta", label: "Receita Bruta de Vendas" },
+    ],
+  },
+  {
+    titulo: "Deduções da Receita",
+    descricao: "Valores que não pertencem efetivamente à empresa",
+    campos: [
+      { key: "impostos_vendas", label: "Impostos sobre Vendas (ICMS, PIS, COFINS, ISS)" },
+      { key: "taxas_aplicativos", label: "Taxas de Aplicativos (iFood, Rappi, etc.)" },
+      { key: "tarifas_cartoes", label: "Tarifas de Cartões (crédito/débito)" },
+      { key: "cancelamentos_estornos", label: "Cancelamentos, Estornos e Descontos" },
+    ],
+  },
+  {
+    titulo: "CMV — Custo da Mercadoria Vendida",
+    descricao: "Alimentos, bebidas, embalagens e descartáveis",
+    campos: [
+      { key: "estoque_inicial", label: "Estoque Inicial" },
+      { key: "compras", label: "Compras do Período" },
+      { key: "estoque_final", label: "Estoque Final" },
+    ],
+  },
+  {
+    titulo: "Despesas Operacionais",
+    descricao: "Gastos para manter a operação funcionando",
+    campos: [
+      { key: "folha_pagamento", label: "Folha de Pagamento (salários + encargos)" },
+      { key: "aluguel", label: "Aluguel e Condomínio" },
+      { key: "energia_agua_gas", label: "Energia, Água e Gás" },
+      { key: "marketing", label: "Marketing e Publicidade" },
+      { key: "manutencao", label: "Manutenção de Equipamentos" },
+      { key: "despesas_administrativas", label: "Despesas Administrativas (internet, sistemas)" },
+      { key: "outras_despesas", label: "Outras Despesas Operacionais" },
+    ],
+  },
+  {
+    titulo: "Resultado Financeiro",
+    descricao: "Juros, tarifas bancárias e receitas financeiras",
+    campos: [
+      { key: "despesas_financeiras", label: "Despesas Financeiras (juros, tarifas, antecipação)" },
+      { key: "receitas_financeiras", label: "Receitas Financeiras" },
+    ],
+  },
+  {
+    titulo: "Impostos sobre Lucro",
+    descricao: "Alíquotas aplicadas sobre o lucro tributável",
+    campos: [
+      { key: "aliquota_irpj", label: "Alíquota IRPJ (ex: 0.15 para 15%)" },
+      { key: "aliquota_csll", label: "Alíquota CSLL (ex: 0.09 para 9%)" },
+      { key: "participacoes", label: "Participações nos Lucros (PLR)" },
+    ],
+  },
+];
 
 const VALORES_PADRAO: DREInput = {
   receita_bruta: 0,
-  devolucoes: 0,
-  abatimentos: 0,
   impostos_vendas: 0,
+  taxas_aplicativos: 0,
+  tarifas_cartoes: 0,
+  cancelamentos_estornos: 0,
   estoque_inicial: 0,
   compras: 0,
   estoque_final: 0,
-  despesas_comerciais: 0,
+  folha_pagamento: 0,
+  aluguel: 0,
+  energia_agua_gas: 0,
+  marketing: 0,
+  manutencao: 0,
   despesas_administrativas: 0,
+  outras_despesas: 0,
   despesas_financeiras: 0,
   receitas_financeiras: 0,
-  depreciacao_amortizacao: 0,
-  resultado_nao_operacional: 0,
   aliquota_irpj: 0.15,
   aliquota_csll: 0.09,
   participacoes: 0,
@@ -193,21 +237,29 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(Object.keys(CAMPOS_LABELS) as Array<keyof DREInput>).map((campo) => (
-              <div key={campo}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  {CAMPOS_LABELS[campo]}
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={dadosForm[campo]}
-                  onChange={(e) =>
-                    setDadosForm((prev) => ({ ...prev, [campo]: parseFloat(e.target.value) || 0 }))
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+          <div className="space-y-5">
+            {SECOES.map((secao) => (
+              <div key={secao.titulo} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
+                  <p className="font-semibold text-gray-800 text-sm">{secao.titulo}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{secao.descricao}</p>
+                </div>
+                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {secao.campos.map(({ key, label }) => (
+                    <div key={key}>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={dadosForm[key as keyof DREInput]}
+                        onChange={(e) =>
+                          setDadosForm((prev) => ({ ...prev, [key]: parseFloat(e.target.value) || 0 }))
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
