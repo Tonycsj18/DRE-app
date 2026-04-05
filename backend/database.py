@@ -16,6 +16,7 @@ def get_conn() -> psycopg2.extensions.connection:
 def init_db():
     conn = get_conn()
     cur = conn.cursor()
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id         SERIAL PRIMARY KEY,
@@ -23,8 +24,10 @@ def init_db():
             password   TEXT NOT NULL,
             is_admin   BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMPTZ DEFAULT NOW()
-        );
+        )
+    """)
 
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS dre_meses (
             id          SERIAL PRIMARY KEY,
             user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -33,11 +36,32 @@ def init_db():
             tipo        TEXT NOT NULL DEFAULT 'completa',
             input_json  JSONB NOT NULL,
             result_json JSONB NOT NULL,
-            saved_at    TIMESTAMPTZ DEFAULT NOW(),
-            UNIQUE(user_id, mes, ano, tipo)
-        );
-        ALTER TABLE dre_meses ADD COLUMN IF NOT EXISTS tipo TEXT NOT NULL DEFAULT 'completa';
+            saved_at    TIMESTAMPTZ DEFAULT NOW()
+        )
     """)
+
+    # Adiciona coluna tipo se ainda não existir (migração de versões antigas)
+    cur.execute("""
+        ALTER TABLE dre_meses ADD COLUMN IF NOT EXISTS tipo TEXT NOT NULL DEFAULT 'completa'
+    """)
+
+    # Adiciona constraint única incluindo tipo se ainda não existir
+    cur.execute("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = 'dre_meses_user_id_mes_ano_tipo_key'
+            ) THEN
+                BEGIN
+                    ALTER TABLE dre_meses ADD CONSTRAINT dre_meses_user_id_mes_ano_tipo_key
+                        UNIQUE (user_id, mes, ano, tipo);
+                EXCEPTION WHEN duplicate_table THEN NULL;
+                END;
+            END IF;
+        END$$
+    """)
+
     conn.commit()
 
     # Cria usuário admin padrão
