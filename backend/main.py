@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import dre, auth
+from app.routers import dre, auth, usuarios
+import database
 
 app = FastAPI(
     title="DRE App API",
     description="API para automação da Demonstração do Resultado do Exercício",
-    version="1.0.0",
+    version="2.0.0",
 )
 
 app.add_middleware(
@@ -16,10 +17,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Inicializa banco de dados e usuários na inicialização
+@app.on_event("startup")
+def startup():
+    database.init_db()
+
 app.include_router(auth.router)
 app.include_router(dre.router)
+app.include_router(usuarios.router)
 
 
 @app.get("/")
 def root():
-    return {"status": "ok", "message": "DRE App API rodando"}
+    return {"status": "ok", "message": "DRE App API v2.0"}
