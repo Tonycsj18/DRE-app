@@ -19,7 +19,13 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
-    database.init_db()
+    import traceback
+    try:
+        database.init_db()
+    except Exception as e:
+        print(f"[STARTUP ERROR] {e}", flush=True)
+        traceback.print_exc()
+        raise
 
 app.include_router(auth.router)
 app.include_router(dre.router)
