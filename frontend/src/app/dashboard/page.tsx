@@ -139,7 +139,7 @@ export default function DashboardPage() {
                   aba === a ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                {a === "simples" ? "📊 Simplificada" : "📋 Completa"}
+                {a === "simples" ? "Simplificada" : "Completa"}
               </button>
             ))}
           </div>

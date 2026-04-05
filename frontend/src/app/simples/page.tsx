@@ -9,10 +9,10 @@ const MES_ATUAL = new Date().getMonth() + 1;
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const TIPOS_NEGOCIO = [
-  { value: "gastronomia", label: "🍽️ Restaurante / Bar / Cafeteria / Padaria" },
-  { value: "comercio",    label: "🛍️ Comércio / Loja" },
-  { value: "servicos",    label: "💼 Serviços / Consultoria" },
-  { value: "ecommerce",   label: "📦 E-commerce" },
+  { value: "gastronomia", label: "Restaurante / Bar / Cafeteria / Padaria" },
+  { value: "comercio",    label: "Comércio / Loja" },
+  { value: "servicos",    label: "Serviços / Consultoria" },
+  { value: "ecommerce",   label: "E-commerce" },
 ];
 
 interface FormData {
@@ -229,37 +229,37 @@ export default function SimplesPage() {
 
           <div className="space-y-4">
             <CampoValor
-              label="👥 Pessoal"
+              label="Pessoal"
               dica="Salários, encargos, férias, pró-labore, benefícios"
               valor={form.despesa_pessoal}
               onChange={set("despesa_pessoal") as (v: number) => void}
             />
             <CampoValor
-              label="🏠 Aluguel e Ocupação"
+              label="Aluguel e Ocupação"
               dica="Aluguel, condomínio, IPTU, taxas do imóvel"
               valor={form.despesa_aluguel}
               onChange={set("despesa_aluguel") as (v: number) => void}
             />
             <CampoValor
-              label="⚡ Utilidades e Operação"
+              label="Utilidades e Operação"
               dica="Energia, água, gás, internet, sistemas, manutenção"
               valor={form.despesa_utilidades}
               onChange={set("despesa_utilidades") as (v: number) => void}
             />
             <CampoValor
-              label="📣 Marketing e Publicidade"
+              label="Marketing e Publicidade"
               dica="Anúncios, redes sociais, materiais, ações promocionais"
               valor={form.despesa_marketing}
               onChange={set("despesa_marketing") as (v: number) => void}
             />
             <CampoValor
-              label="🏦 Parcelas e Juros"
+              label="Parcelas e Juros"
               dica="Parcelas de empréstimos, juros bancários, financiamentos"
               valor={form.despesa_financeira}
               onChange={set("despesa_financeira") as (v: number) => void}
             />
             <CampoValor
-              label="📋 Outras Despesas"
+              label="Outras Despesas"
               dica="Contabilidade, seguros, material de escritório, outros"
               valor={form.despesa_outras}
               onChange={set("despesa_outras") as (v: number) => void}

@@ -43,7 +43,7 @@ function BarraCategoria({ cat, max }: { cat: Categoria; max: number }) {
       </div>
       {cat.bench_min != null && cat.bench_max != null && (
         <p className={`text-xs mt-1.5 font-medium ${textCor}`}>
-          {cat.status === "ok" ? "✓ Dentro do ideal" : cat.status === "atencao" ? "⚠ Acima do ideal" : "✗ Muito acima do ideal"}
+          {cat.status === "ok" ? "Dentro do ideal" : cat.status === "atencao" ? "Acima do ideal" : "Muito acima do ideal"}
           {" — "}referência: {cat.bench_min}% a {cat.bench_max}%
         </p>
       )}
@@ -185,9 +185,9 @@ export default function SimplesResultadoPage() {
           {isLucro ? "Lucro de" : "Prejuízo de"} {BRL(Math.abs(dre.lucro_liquido))} no mês
         </p>
         <p className="text-sm text-gray-500 mt-1">
-          {dre.margem_status === "ok" ? "✅ Dentro do esperado para o seu setor"
-            : dre.margem_status === "atencao" ? "⚠️ Abaixo do ideal — vale revisar os custos"
-            : "🚨 Resultado crítico — ação imediata necessária"}
+          {dre.margem_status === "ok" ? "Dentro do esperado para o seu setor"
+            : dre.margem_status === "atencao" ? "Abaixo do ideal — vale revisar os custos"
+            : "Resultado crítico — ação imediata necessária"}
         </p>
         <p className="text-xs text-gray-400 mt-2">Referência do setor: {dre.bench_margem_min}% a {dre.bench_margem_max}%</p>
       </div>
@@ -202,7 +202,7 @@ export default function SimplesResultadoPage() {
               aba === a ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            {a === "resultado" ? "📊 Resultado" : "🎯 Simulador"}
+            {a === "resultado" ? "Resultado" : "Simulador"}
           </button>
         ))}
       </div>
@@ -211,7 +211,7 @@ export default function SimplesResultadoPage() {
         <div className="space-y-5">
           {/* Narrativa */}
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 space-y-3">
-            <p className="text-xs font-bold text-blue-600 uppercase tracking-wide">💬 Análise do mês em linguagem simples</p>
+            <p className="text-xs font-bold text-blue-600 uppercase tracking-wide">Análise do mês</p>
             {dre.narrativa.map((frase, i) => (
               <p key={i} className="text-sm text-gray-700 leading-relaxed">{frase}</p>
             ))}
@@ -219,14 +219,14 @@ export default function SimplesResultadoPage() {
 
           {/* Fluxo resumido */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
-            <p className="text-sm font-bold text-gray-700 mb-3">💰 Como seu dinheiro se dividiu</p>
+            <p className="text-sm font-bold text-gray-700 mb-3">Como seu dinheiro se dividiu</p>
             {[
               { label: "Faturamento total", valor: dre.receita_total, cor: "text-gray-900", bg: "bg-gray-100" },
               { label: "Impostos e taxas", valor: -dre.impostos_taxas, cor: "text-red-600", bg: "bg-red-50", indent: true },
               { label: "Custo dos produtos", valor: -dre.custo_produtos, cor: "text-red-600", bg: "bg-red-50", indent: true },
               { label: "O que sobrou para pagar despesas", valor: dre.lucro_bruto, cor: dre.lucro_bruto >= 0 ? "text-blue-700" : "text-red-700", bg: "bg-blue-50", bold: true },
               { label: "Total de despesas", valor: -dre.total_despesas, cor: "text-red-600", bg: "bg-red-50", indent: true },
-              { label: isLucro ? "✅ Lucro líquido do mês" : "❌ Prejuízo do mês", valor: dre.lucro_liquido, cor: isLucro ? "text-green-700" : "text-red-700", bg: isLucro ? "bg-green-50" : "bg-red-50", bold: true },
+              { label: isLucro ? "Lucro líquido do mês" : "Prejuízo do mês", valor: dre.lucro_liquido, cor: isLucro ? "text-green-700" : "text-red-700", bg: isLucro ? "bg-green-50" : "bg-red-50", bold: true },
             ].map(({ label, valor, cor, bg, indent, bold }, i) => (
               <div key={i} className={`flex justify-between items-center rounded-lg px-3 py-2 ${bg}`}>
                 <span className={`text-sm ${bold ? "font-bold text-gray-800" : "text-gray-600"} ${indent ? "pl-3" : ""}`}>{label}</span>
@@ -237,7 +237,7 @@ export default function SimplesResultadoPage() {
 
           {/* O que mais pesou */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <p className="text-sm font-bold text-gray-700 mb-4">📊 O que mais está cortando seu lucro</p>
+            <p className="text-sm font-bold text-gray-700 mb-4">O que mais está impactando seu lucro</p>
             <div className="space-y-3">
               {dre.categorias
                 .filter((c) => c.valor > 0)
@@ -252,7 +252,7 @@ export default function SimplesResultadoPage() {
 
       {aba === "simulador" && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <p className="text-sm font-bold text-gray-700 mb-1">🎯 E se eu cortar alguns gastos?</p>
+          <p className="text-sm font-bold text-gray-700 mb-1">E se eu cortar alguns gastos?</p>
           <Simulador dre={dre} />
         </div>
       )}
