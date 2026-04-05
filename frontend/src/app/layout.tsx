@@ -8,6 +8,7 @@ const geist = Geist({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "DRE App",
   description: "Automatize a Demonstração do Resultado do Exercício",
+  colorScheme: "light",
 };
 
 export default function RootLayout({
