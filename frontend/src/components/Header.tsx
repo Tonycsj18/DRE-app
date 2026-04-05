@@ -19,7 +19,6 @@ export default function Header() {
           <div className="bg-blue-600 rounded-lg flex items-center justify-center px-2.5 py-1">
             <span className="text-white font-bold text-xs tracking-wide">Meu DRE</span>
           </div>
-          <span className="font-semibold text-gray-800 text-lg">DRE App</span>
         </div>
 
         {!isLoginPage && (
