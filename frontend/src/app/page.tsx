@@ -77,7 +77,8 @@ export default function Home() {
     try {
       const formData = new FormData();
       arquivos.forEach((f) => formData.append("arquivos", f));
-      const res = await fetch("http://localhost:8000/dre/upload", {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API}/dre/upload`, {
         method: "POST",
         body: formData,
       });
@@ -96,7 +97,8 @@ export default function Home() {
     setCarregando(true);
     setErro(null);
     try {
-      const res = await fetch("http://localhost:8000/dre/calcular", {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API}/dre/calcular`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dadosForm),
