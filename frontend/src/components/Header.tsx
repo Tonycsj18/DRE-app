@@ -16,8 +16,8 @@ export default function Header() {
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">D</span>
+          <div className="bg-blue-600 rounded-lg flex items-center justify-center px-2.5 py-1">
+            <span className="text-white font-bold text-xs tracking-wide">Meu DRE</span>
           </div>
           <span className="font-semibold text-gray-800 text-lg">DRE App</span>
         </div>
