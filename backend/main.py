@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import dre
+from app.routers import dre, auth
 
 app = FastAPI(
     title="DRE App API",
@@ -16,6 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(dre.router)
 
 
