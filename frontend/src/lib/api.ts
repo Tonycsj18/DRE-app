@@ -27,13 +27,23 @@ export function isAdmin(): boolean {
 
 export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const token = getToken();
-  return fetch(`${API}${path}`, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    return await fetch(`${API}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...(options.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+  } catch (e) {
+    if ((e as Error).name === "AbortError") throw new Error("Servidor demorou para responder. Tente novamente.");
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function apiJson<T>(path: string, options: RequestInit = {}): Promise<T> {

@@ -107,7 +107,11 @@ export default function DashboardPage() {
       </div>
 
       {carregando ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-16 text-center text-gray-400 text-sm">Carregando...</div>
+        <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
+          <div className="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-gray-500 text-sm font-medium">Carregando dados...</p>
+          <p className="text-gray-400 text-xs mt-1">Pode levar alguns segundos na primeira vez</p>
+        </div>
       ) : erro ? (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{erro}</div>
       ) : !hasCompleta && !hasSimples ? (
