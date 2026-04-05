@@ -1,7 +1,23 @@
+import sys
+print("[MAIN] Iniciando imports...", file=sys.stderr, flush=True)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import dre, auth, usuarios, dre_simples
+
+print("[MAIN] FastAPI importado", file=sys.stderr, flush=True)
+
+try:
+    from app.routers import dre, auth, usuarios
+    print("[MAIN] Routers base importados", file=sys.stderr, flush=True)
+    from app.routers import dre_simples
+    print("[MAIN] Router dre_simples importado", file=sys.stderr, flush=True)
+except Exception as _e:
+    print(f"[MAIN] ERRO no import de routers: {_e}", file=sys.stderr, flush=True)
+    import traceback; traceback.print_exc()
+    raise
+
 import database
+print("[MAIN] database importado", file=sys.stderr, flush=True)
 
 app = FastAPI(
     title="DRE App API",
