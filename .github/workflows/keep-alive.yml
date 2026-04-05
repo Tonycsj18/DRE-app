@@ -1,9 +1,14 @@
 name: Keep Backend Alive
 
+# Horário de Brasília (BRT = UTC-3)
+# 8h BRT = 11h UTC | 22h BRT = 01h UTC
+# A cada 14 minutos das 8h às 22h = ~60 pings/dia = ~1.860 min/mês (dentro do limite gratuito de 2.000)
+
 on:
   schedule:
-    - cron: '*/10 * * * *'  # Executa a cada 10 minutos
-  workflow_dispatch:          # Permite rodar manualmente se necessário
+    - cron: '*/14 11-23 * * *'  # 8h às 20h59 BRT
+    - cron: '*/14 0-1 * * *'    # 21h às 22h59 BRT
+  workflow_dispatch:              # Permite rodar manualmente se necessário
 
 jobs:
   ping:
