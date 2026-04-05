@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
@@ -13,10 +14,19 @@ TOKEN_EXPIRE_HOURS = 8
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Credenciais padrão — configure via variáveis de ambiente no Render
-USUARIOS = {
+# Usuário principal via variáveis de ambiente
+USUARIOS: dict[str, str] = {
     os.getenv("APP_USERNAME", "admin"): os.getenv("APP_PASSWORD", "dre@2024"),
 }
+
+# Usuários adicionais via variável de ambiente APP_USERS (JSON)
+# Formato: {"cafecultura": "cafe01", "outro": "senha"}
+_extra = os.getenv("APP_USERS", "")
+if _extra:
+    try:
+        USUARIOS.update(json.loads(_extra))
+    except Exception:
+        pass
 
 
 class LoginRequest(BaseModel):
