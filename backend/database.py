@@ -30,11 +30,13 @@ def init_db():
             user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             mes         INTEGER NOT NULL,
             ano         INTEGER NOT NULL,
+            tipo        TEXT NOT NULL DEFAULT 'completa',
             input_json  JSONB NOT NULL,
             result_json JSONB NOT NULL,
             saved_at    TIMESTAMPTZ DEFAULT NOW(),
-            UNIQUE(user_id, mes, ano)
+            UNIQUE(user_id, mes, ano, tipo)
         );
+        ALTER TABLE dre_meses ADD COLUMN IF NOT EXISTS tipo TEXT NOT NULL DEFAULT 'completa';
     """)
     conn.commit()
 
@@ -135,7 +137,7 @@ def update_password(username: str, new_password: str) -> bool:
 
 # ── DRE helpers ───────────────────────────────────────────────────────────────
 
-def save_dre_mes(username: str, mes: int, ano: int, input_data: dict, result_data: dict) -> bool:
+def save_dre_mes(username: str, mes: int, ano: int, input_data: dict, result_data: dict, tipo: str = "completa") -> bool:
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("SELECT id FROM users WHERE username = %s", (username,))
@@ -145,13 +147,13 @@ def save_dre_mes(username: str, mes: int, ano: int, input_data: dict, result_dat
         conn.close()
         return False
     cur.execute(
-        """INSERT INTO dre_meses (user_id, mes, ano, input_json, result_json)
-           VALUES (%s, %s, %s, %s, %s)
-           ON CONFLICT (user_id, mes, ano) DO UPDATE SET
+        """INSERT INTO dre_meses (user_id, mes, ano, tipo, input_json, result_json)
+           VALUES (%s, %s, %s, %s, %s, %s)
+           ON CONFLICT (user_id, mes, ano, tipo) DO UPDATE SET
                input_json  = EXCLUDED.input_json,
                result_json = EXCLUDED.result_json,
                saved_at    = NOW()""",
-        (user["id"], mes, ano, json.dumps(input_data), json.dumps(result_data)),
+        (user["id"], mes, ano, tipo, json.dumps(input_data), json.dumps(result_data)),
     )
     conn.commit()
     cur.close()
@@ -159,7 +161,7 @@ def save_dre_mes(username: str, mes: int, ano: int, input_data: dict, result_dat
     return True
 
 
-def list_dre_meses(username: str):
+def list_dre_meses(username: str, tipo: str = "completa"):
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("SELECT id FROM users WHERE username = %s", (username,))
@@ -169,8 +171,8 @@ def list_dre_meses(username: str):
         conn.close()
         return []
     cur.execute(
-        "SELECT mes, ano, input_json, result_json, saved_at FROM dre_meses WHERE user_id = %s ORDER BY ano, mes",
-        (user["id"],),
+        "SELECT mes, ano, tipo, input_json, result_json, saved_at FROM dre_meses WHERE user_id = %s AND tipo = %s ORDER BY ano, mes",
+        (user["id"], tipo),
     )
     rows = cur.fetchall()
     cur.close()
@@ -179,6 +181,7 @@ def list_dre_meses(username: str):
         {
             "mes": r["mes"],
             "ano": r["ano"],
+            "tipo": r["tipo"],
             "input": r["input_json"],
             "resultado": r["result_json"],
             "saved_at": r["saved_at"].isoformat() if r["saved_at"] else None,
@@ -187,7 +190,7 @@ def list_dre_meses(username: str):
     ]
 
 
-def delete_dre_mes(username: str, mes: int, ano: int) -> bool:
+def delete_dre_mes(username: str, mes: int, ano: int, tipo: str = "completa") -> bool:
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("SELECT id FROM users WHERE username = %s", (username,))
@@ -197,8 +200,8 @@ def delete_dre_mes(username: str, mes: int, ano: int) -> bool:
         conn.close()
         return False
     cur.execute(
-        "DELETE FROM dre_meses WHERE user_id = %s AND mes = %s AND ano = %s",
-        (user["id"], mes, ano),
+        "DELETE FROM dre_meses WHERE user_id = %s AND mes = %s AND ano = %s AND tipo = %s",
+        (user["id"], mes, ano, tipo),
     )
     affected = cur.rowcount
     conn.commit()
