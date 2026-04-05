@@ -1,0 +1,16 @@
+name: Keep Backend Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Executa a cada 10 minutos
+  workflow_dispatch:          # Permite rodar manualmente se necessário
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend
+        run: |
+          echo "Pingando o backend..."
+          curl -f https://dre-app-api.onrender.com/ || echo "Backend não respondeu, mas continuando..."
+          echo "Ping concluído."
