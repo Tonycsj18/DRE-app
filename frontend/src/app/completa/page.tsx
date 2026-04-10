@@ -118,7 +118,26 @@ export default function Home() {
       const res = await fetch(`${API}/dre/upload`, { method: "POST", body: formData });
       if (!res.ok) throw new Error();
       const data: DadosExtraidos = await res.json();
-      setForm((prev) => ({ ...prev, ...data.dados_extraidos }));
+      const ext = data.dados_extraidos as Record<string, number>;
+
+      // Mapeia campos extraídos do parser para os campos do formulário DRE
+      setForm((prev) => ({
+        ...prev,
+        // NF-e de saída (venda) → vendas_pix como canal genérico
+        vendas_pix: prev.vendas_pix + (ext.receita_bruta ?? 0),
+        // ICMS/impostos extraídos → simples_nacional
+        simples_nacional: prev.simples_nacional + (ext.impostos_vendas ?? 0),
+        // NF-e de entrada (compra) → produtos_prontos
+        produtos_prontos: prev.produtos_prontos + (ext.compras ?? 0),
+        // Frete nas compras
+        royalties_frete: prev.royalties_frete + (ext.royalties_frete ?? 0),
+        // Descontos/devoluções
+        descontos_devolucoes: prev.descontos_devolucoes + (ext.devolucoes ?? 0),
+        // Campos com nome igual
+        estoque_inicial: prev.estoque_inicial + (ext.estoque_inicial ?? 0),
+        estoque_final: prev.estoque_final + (ext.estoque_final ?? 0),
+        receitas_financeiras: prev.receitas_financeiras + (ext.receitas_financeiras ?? 0),
+      }));
       setModoManual(true);
     } catch {
       setErro("Não foi possível processar os documentos.");
