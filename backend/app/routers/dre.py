@@ -20,7 +20,7 @@ async def upload_documentos(arquivos: List[UploadFile] = File(...)):
     dados_extraidos: dict = {}
     for arquivo in arquivos:
         extensao = arquivo.filename.lower().split(".")[-1] if arquivo.filename else ""
-        if extensao not in ("pdf", "xlsx", "xls"):
+        if extensao not in ("pdf", "xlsx", "xls", "xml"):
             raise HTTPException(status_code=400, detail=f"Arquivo '{arquivo.filename}' não suportado.")
         conteudo = await arquivo.read()
         dados = processar_documento(arquivo.filename or "", conteudo)

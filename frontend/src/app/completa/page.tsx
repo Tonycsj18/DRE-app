@@ -101,7 +101,8 @@ export default function Home() {
     e.preventDefault();
     setArrastando(false);
     const novos = Array.from(e.dataTransfer.files).filter((f) =>
-      ["application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"].includes(f.type)
+      ["application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "text/xml", "application/xml"].includes(f.type)
+      || f.name.toLowerCase().endsWith(".xml")
     );
     setArquivos((prev) => [...prev, ...novos]);
   }, []);
@@ -175,7 +176,7 @@ export default function Home() {
               </div>
               <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
                 Selecionar arquivos
-                <input type="file" multiple accept=".pdf,.xlsx,.xls" className="hidden" onChange={(e) => { if (e.target.files) setArquivos((p) => [...p, ...Array.from(e.target.files!)]); }} />
+                <input type="file" multiple accept=".pdf,.xlsx,.xls,.xml" className="hidden" onChange={(e) => { if (e.target.files) setArquivos((p) => [...p, ...Array.from(e.target.files!)]); }} />
               </label>
             </div>
           </div>
