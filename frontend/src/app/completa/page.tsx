@@ -81,6 +81,23 @@ function Secao({ titulo, descricao, children }: { titulo: string; descricao: str
   );
 }
 
+const CATEGORIAS_CMV = [
+  { key: "insumos_manipulados", label: "Insumos Manipulados" },
+  { key: "produtos_prontos", label: "Produtos Prontos" },
+  { key: "bebidas", label: "Bebidas" },
+  { key: "padaria_confeitaria", label: "Padaria e Confeitaria" },
+  { key: "descartaveis_embalagens", label: "Descartáveis e Embalagens" },
+] as const;
+
+const CANAIS_VENDA = [
+  { key: "vendas_pix", label: "Vendas PIX" },
+  { key: "vendas_dinheiro", label: "Vendas Dinheiro" },
+  { key: "vendas_debito", label: "Vendas Débito" },
+  { key: "vendas_credito", label: "Vendas Crédito" },
+  { key: "vendas_voucher", label: "Vendas Voucher" },
+  { key: "vendas_ifood", label: "Vendas iFood/Delivery" },
+] as const;
+
 export default function Home() {
   const router = useRouter();
   const [arquivos, setArquivos] = useState<File[]>([]);
@@ -89,6 +106,9 @@ export default function Home() {
   const [erro, setErro] = useState<string | null>(null);
   const [form, setForm] = useState<DREInput>(VALORES_PADRAO);
   const [modoManual, setModoManual] = useState(false);
+  const [tipoUpload, setTipoUpload] = useState<"compras" | "vendas">("compras");
+  const [categoriaCompra, setCategoriaCompra] = useState<typeof CATEGORIAS_CMV[number]["key"]>("produtos_prontos");
+  const [canalVenda, setCanalVenda] = useState<typeof CANAIS_VENDA[number]["key"]>("vendas_pix");
 
   const set = (key: keyof DREInput) => (v: number) =>
     setForm((prev) => ({ ...prev, [key]: v }));
@@ -120,24 +140,29 @@ export default function Home() {
       const data: DadosExtraidos = await res.json();
       const ext = data.dados_extraidos as Record<string, number>;
 
-      // Mapeia campos extraídos do parser para os campos do formulário DRE
-      setForm((prev) => ({
-        ...prev,
-        // NF-e de saída (venda) → vendas_pix como canal genérico
-        vendas_pix: prev.vendas_pix + (ext.receita_bruta ?? 0),
-        // ICMS/impostos extraídos → simples_nacional
-        simples_nacional: prev.simples_nacional + (ext.impostos_vendas ?? 0),
-        // NF-e de entrada (compra) → produtos_prontos
-        produtos_prontos: prev.produtos_prontos + (ext.compras ?? 0),
-        // Frete nas compras
-        royalties_frete: prev.royalties_frete + (ext.royalties_frete ?? 0),
-        // Descontos/devoluções
-        descontos_devolucoes: prev.descontos_devolucoes + (ext.devolucoes ?? 0),
-        // Campos com nome igual
-        estoque_inicial: prev.estoque_inicial + (ext.estoque_inicial ?? 0),
-        estoque_final: prev.estoque_final + (ext.estoque_final ?? 0),
-        receitas_financeiras: prev.receitas_financeiras + (ext.receitas_financeiras ?? 0),
-      }));
+      // Valor total extraído dos documentos (independente do tpNF do XML)
+      // tpNF=1 no XML significa saída do FORNECEDOR → para nós é compra
+      const valorTotal = (ext.receita_bruta ?? 0) + (ext.compras ?? 0);
+
+      if (tipoUpload === "compras") {
+        // Documentos de compra → categoria CMV selecionada
+        setForm((prev) => ({
+          ...prev,
+          [categoriaCompra]: prev[categoriaCompra] + valorTotal,
+          royalties_frete: prev.royalties_frete + (ext.royalties_frete ?? 0),
+          estoque_inicial: prev.estoque_inicial + (ext.estoque_inicial ?? 0),
+          estoque_final: prev.estoque_final + (ext.estoque_final ?? 0),
+        }));
+      } else {
+        // Documentos de venda → canal de venda selecionado + impostos
+        setForm((prev) => ({
+          ...prev,
+          [canalVenda]: prev[canalVenda] + valorTotal,
+          simples_nacional: prev.simples_nacional + (ext.impostos_vendas ?? 0),
+          descontos_devolucoes: prev.descontos_devolucoes + (ext.devolucoes ?? 0),
+          receitas_financeiras: prev.receitas_financeiras + (ext.receitas_financeiras ?? 0),
+        }));
+      }
       setModoManual(true);
     } catch {
       setErro("Não foi possível processar os documentos.");
@@ -215,6 +240,55 @@ export default function Home() {
               ))}
             </div>
           )}
+
+          {/* Seletor de tipo de documento */}
+          <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
+            <p className="text-sm font-semibold text-gray-700">Estes documentos são:</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setTipoUpload("compras")}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "compras" ? "bg-orange-500 text-white border-orange-500" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+              >
+                Compras / Fornecedores
+              </button>
+              <button
+                onClick={() => setTipoUpload("vendas")}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "vendas" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+              >
+                Vendas / Receitas
+              </button>
+            </div>
+
+            {tipoUpload === "compras" && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Categoria CMV (onde lançar as compras)</label>
+                <select
+                  value={categoriaCompra}
+                  onChange={(e) => setCategoriaCompra(e.target.value as typeof categoriaCompra)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                >
+                  {CATEGORIAS_CMV.map((c) => (
+                    <option key={c.key} value={c.key}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {tipoUpload === "vendas" && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Canal de venda</label>
+                <select
+                  value={canalVenda}
+                  onChange={(e) => setCanalVenda(e.target.value as typeof canalVenda)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  {CANAIS_VENDA.map((c) => (
+                    <option key={c.key} value={c.key}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
           <div className="flex gap-3">
             <button onClick={handleUpload} disabled={arquivos.length === 0 || carregando} className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">
