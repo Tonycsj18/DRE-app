@@ -276,25 +276,25 @@ export default function Home() {
                 onClick={() => setTipoUpload("compras")}
                 className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "compras" ? "bg-orange-500 text-white border-orange-500" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
               >
-                🛒 Compras / Fornecedores
+                Compras / Fornecedores
               </button>
               <button
                 onClick={() => setTipoUpload("vendas")}
                 className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "vendas" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
               >
-                💰 Vendas / Receitas
+                Vendas / Receitas
               </button>
               <button
                 onClick={() => setTipoUpload("impostos")}
                 className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "impostos" ? "bg-purple-600 text-white border-purple-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
               >
-                🧾 Impostos / Guias
+                Impostos / Guias
               </button>
               <button
                 onClick={() => setTipoUpload("rh")}
                 className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "rh" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
               >
-                👥 RH / Pessoal
+                RH / Pessoal
               </button>
             </div>
 
