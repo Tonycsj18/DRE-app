@@ -163,6 +163,8 @@ export default function Home() {
           receitas_financeiras: prev.receitas_financeiras + (ext.receitas_financeiras ?? 0),
         }));
       }
+      // Limpa a lista após processar para evitar reprocessamento ao adicionar mais documentos
+      setArquivos([]);
       setModoManual(true);
     } catch {
       setErro("Não foi possível processar os documentos.");
