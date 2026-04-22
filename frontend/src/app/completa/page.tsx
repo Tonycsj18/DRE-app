@@ -98,6 +98,17 @@ const CANAIS_VENDA = [
   { key: "vendas_ifood", label: "Vendas iFood/Delivery" },
 ] as const;
 
+const CATEGORIAS_IMPOSTO = [
+  { key: "simples_nacional", label: "Simples Nacional (DAS)" },
+  { key: "outras_taxas",     label: "ICMS / ISS / Outras Guias" },
+] as const;
+
+const CATEGORIAS_RH = [
+  { key: "salarios_encargos",      label: "Salários, FGTS e INSS (Folha)" },
+  { key: "beneficios",             label: "Benefícios (VT, VA, Plano de Saúde)" },
+  { key: "pro_labore_operacional", label: "Pró-labore Operacional" },
+] as const;
+
 export default function Home() {
   const router = useRouter();
   const [arquivos, setArquivos] = useState<File[]>([]);
@@ -106,9 +117,11 @@ export default function Home() {
   const [erro, setErro] = useState<string | null>(null);
   const [form, setForm] = useState<DREInput>(VALORES_PADRAO);
   const [modoManual, setModoManual] = useState(false);
-  const [tipoUpload, setTipoUpload] = useState<"compras" | "vendas">("compras");
+  const [tipoUpload, setTipoUpload] = useState<"compras" | "vendas" | "impostos" | "rh">("compras");
   const [categoriaCompra, setCategoriaCompra] = useState<typeof CATEGORIAS_CMV[number]["key"]>("produtos_prontos");
   const [canalVenda, setCanalVenda] = useState<typeof CANAIS_VENDA[number]["key"]>("vendas_pix");
+  const [categoriaImposto, setCategoriaImposto] = useState<typeof CATEGORIAS_IMPOSTO[number]["key"]>("simples_nacional");
+  const [categoriaRH, setCategoriaRH] = useState<typeof CATEGORIAS_RH[number]["key"]>("salarios_encargos");
 
   const set = (key: keyof DREInput) => (v: number) =>
     setForm((prev) => ({ ...prev, [key]: v }));
@@ -153,7 +166,7 @@ export default function Home() {
           estoque_inicial: prev.estoque_inicial + (ext.estoque_inicial ?? 0),
           estoque_final: prev.estoque_final + (ext.estoque_final ?? 0),
         }));
-      } else {
+      } else if (tipoUpload === "vendas") {
         // Documentos de venda → canal de venda selecionado + impostos
         setForm((prev) => ({
           ...prev,
@@ -161,6 +174,18 @@ export default function Home() {
           simples_nacional: prev.simples_nacional + (ext.impostos_vendas ?? 0),
           descontos_devolucoes: prev.descontos_devolucoes + (ext.devolucoes ?? 0),
           receitas_financeiras: prev.receitas_financeiras + (ext.receitas_financeiras ?? 0),
+        }));
+      } else if (tipoUpload === "impostos") {
+        // Guias de imposto (DAS, ICMS, ISS, etc.) → campo de imposto selecionado
+        setForm((prev) => ({
+          ...prev,
+          [categoriaImposto]: (prev[categoriaImposto] as number) + valorTotal,
+        }));
+      } else if (tipoUpload === "rh") {
+        // Documentos de RH (folha, FGTS, INSS, benefícios) → campo RH selecionado
+        setForm((prev) => ({
+          ...prev,
+          [categoriaRH]: (prev[categoriaRH] as number) + valorTotal,
         }));
       }
       // Limpa a lista após processar para evitar reprocessamento ao adicionar mais documentos
@@ -246,18 +271,30 @@ export default function Home() {
           {/* Seletor de tipo de documento */}
           <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
             <p className="text-sm font-semibold text-gray-700">Estes documentos são:</p>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setTipoUpload("compras")}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "compras" ? "bg-orange-500 text-white border-orange-500" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+                className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "compras" ? "bg-orange-500 text-white border-orange-500" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
               >
-                Compras / Fornecedores
+                🛒 Compras / Fornecedores
               </button>
               <button
                 onClick={() => setTipoUpload("vendas")}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "vendas" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+                className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "vendas" ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
               >
-                Vendas / Receitas
+                💰 Vendas / Receitas
+              </button>
+              <button
+                onClick={() => setTipoUpload("impostos")}
+                className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "impostos" ? "bg-purple-600 text-white border-purple-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+              >
+                🧾 Impostos / Guias
+              </button>
+              <button
+                onClick={() => setTipoUpload("rh")}
+                className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "rh" ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+              >
+                👥 RH / Pessoal
               </button>
             </div>
 
@@ -288,6 +325,38 @@ export default function Home() {
                     <option key={c.key} value={c.key}>{c.label}</option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {tipoUpload === "impostos" && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de guia / imposto</label>
+                <select
+                  value={categoriaImposto}
+                  onChange={(e) => setCategoriaImposto(e.target.value as typeof categoriaImposto)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  {CATEGORIAS_IMPOSTO.map((c) => (
+                    <option key={c.key} value={c.key}>{c.label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">Ex: DAS do Simples Nacional, DARF de ICMS, guia de ISS</p>
+              </div>
+            )}
+
+            {tipoUpload === "rh" && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Categoria de RH</label>
+                <select
+                  value={categoriaRH}
+                  onChange={(e) => setCategoriaRH(e.target.value as typeof categoriaRH)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {CATEGORIAS_RH.map((c) => (
+                    <option key={c.key} value={c.key}>{c.label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">Ex: folha de pagamento, guia de FGTS, DARF do INSS, recibo de benefícios</p>
               </div>
             )}
           </div>
