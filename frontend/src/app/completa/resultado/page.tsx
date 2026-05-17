@@ -130,7 +130,14 @@ export default function ResultadoPage() {
           >
             {salvando ? "Salvando..." : salvo ? "Salvo no Dashboard" : "Salvar no Dashboard"}
           </button>
-          <button onClick={() => router.push("/completa")} className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          <button
+            onClick={() => {
+              sessionStorage.removeItem("dreInput");
+              sessionStorage.removeItem("dreResultado");
+              router.push("/completa");
+            }}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
             Nova DRE
           </button>
         </div>
@@ -193,6 +200,16 @@ export default function ResultadoPage() {
             <Benchmark key={label} label={label} valor={valor} referencia={ref} descricao={desc} dentro={valor != null ? fn(valor) : null} />
           ))}
         </div>
+      </div>
+
+      {/* Navegação */}
+      <div className="flex justify-center gap-6">
+        <button onClick={() => router.push("/completa")} className="text-sm text-blue-600 hover:text-blue-800 transition-colors font-medium">
+          ← Editar estes dados
+        </button>
+        <button onClick={() => router.push("/")} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+          Voltar ao início
+        </button>
       </div>
 
       {/* DRE Completa */}

@@ -171,7 +171,14 @@ export default function SimplesResultadoPage() {
           >
             {salvando ? "Salvando..." : salvo ? "Salvo ✓" : "Salvar"}
           </button>
-          <button onClick={() => router.push("/simples")} className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium">
+          <button
+            onClick={() => {
+              sessionStorage.removeItem("dreSimplesInput");
+              sessionStorage.removeItem("dreSimplesResultado");
+              router.push("/simples");
+            }}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium"
+          >
             Novo mês
           </button>
         </div>
@@ -258,9 +265,12 @@ export default function SimplesResultadoPage() {
       )}
 
       {/* Voltar */}
-      <div className="flex justify-center">
+      <div className="flex justify-center gap-6">
+        <button onClick={() => router.push("/simples")} className="text-sm text-blue-600 hover:text-blue-800 transition-colors font-medium">
+          ← Editar estes dados
+        </button>
         <button onClick={() => router.push("/")} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-          ← Voltar ao início
+          Voltar ao início
         </button>
       </div>
     </div>

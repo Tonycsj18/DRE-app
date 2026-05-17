@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -58,6 +58,11 @@ export default function SimplesPage() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [etapa, setEtapa] = useState(1); // 1=tipo+periodo, 2=receita, 3=despesas
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("dreSimplesInput");
+    if (saved) setForm(JSON.parse(saved));
+  }, []);
 
   const set = (key: keyof FormData) => (v: number | string) =>
     setForm((prev) => ({ ...prev, [key]: v }));

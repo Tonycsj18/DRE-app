@@ -214,6 +214,100 @@ def parse_danfe_pdf(texto: str) -> dict[str, Any]:
     return dados
 
 
+# ── Parser Royalties / Fundo de Marketing (Franquia) ─────────────────────────
+
+def parse_royalties_pdf(texto: str) -> dict[str, Any]:
+    """
+    Parser para boletos e faturas de royalties ou fundo de marketing de franquias.
+
+    Detecta documentos que mencionam royalties ou fundo de marketing e extrai
+    o valor a pagar. Distingue entre royalties e fundo de marketing pelo conteúdo.
+    """
+    texto_lower = texto.lower()
+
+    eh_royalties = any(p in texto_lower for p in [
+        "royalties",
+        "fundo de marketing",
+        "fundo nacional de marketing",
+        "fundo regional de marketing",
+        "taxa de franquia",
+        "taxa administrativa da franquia",
+        "contribuição da rede",
+        "fee de franquia",
+        "fee mensal",
+    ])
+    if not eh_royalties:
+        return {}
+
+    eh_fundo_marketing = any(p in texto_lower for p in [
+        "fundo de marketing",
+        "fundo nacional de marketing",
+        "fundo regional de marketing",
+        "fundo publicitário",
+    ])
+
+    padroes_valor = [
+        r"valor\s+a\s+pagar\s*[:\s]*([\d.,]+)",
+        r"valor\s+do\s+boleto\s*[:\s]*([\d.,]+)",
+        r"valor\s+do\s+documento\s*[:\s]*([\d.,]+)",
+        r"valor\s+total\s*[:\s]*([\d.,]+)",
+        r"total\s+a\s+pagar\s*[:\s]*([\d.,]+)",
+        r"royalties\s*[:\s]*([\d.,]+)",
+        r"fundo\s+de\s+marketing\s*[:\s]*([\d.,]+)",
+        r"total\s*[:\s]*([\d.,]+)",
+    ]
+
+    for p in padroes_valor:
+        m = re.search(p, texto_lower)
+        if m:
+            valor = _float(m.group(1).replace(".", "").replace(",", "."))
+            if valor > 0:
+                campo = "fundo_marketing_rede" if eh_fundo_marketing else "royalties_frete"
+                return {campo: valor, "receita_bruta": valor}
+
+    return {}
+
+
+# ── Parser DAS (Simples Nacional) ─────────────────────────────────────────────
+
+def parse_das_pdf(texto: str) -> dict[str, Any]:
+    """
+    Parser para Guia DAS do Simples Nacional (Documento de Arrecadação do Simples Nacional).
+    Detecta pelo cabeçalho e extrai o valor total a pagar.
+    """
+    texto_lower = texto.lower()
+
+    eh_das = any(p in texto_lower for p in [
+        "documento de arrecadação do simples nacional",
+        "das - simples nacional",
+        "das simples nacional",
+        "pgdas-d",
+        "pgdas",
+        "guia das",
+        "simples nacional\ndas",
+    ])
+    if not eh_das:
+        return {}
+
+    padroes = [
+        r"valor\s+a\s+pagar\s*[:\s]*([\d.,]+)",
+        r"valor\s+principal\s*[:\s]*([\d.,]+)",
+        r"total\s+a\s+recolher\s*[:\s]*([\d.,]+)",
+        r"valor\s+do\s+documento\s*[:\s]*([\d.,]+)",
+        r"total\s+a\s+pagar\s*[:\s]*([\d.,]+)",
+        r"valor\s+total\s*[:\s]*([\d.,]+)",
+    ]
+
+    for p in padroes:
+        m = re.search(p, texto_lower)
+        if m:
+            valor = _float(m.group(1).replace(".", "").replace(",", "."))
+            if valor > 0:
+                return {"receita_bruta": valor}
+
+    return {}
+
+
 # ── Parser PDF genérico ────────────────────────────────────────────────────────
 
 def parse_pdf(conteudo: bytes) -> dict[str, Any]:
@@ -226,7 +320,17 @@ def parse_pdf(conteudo: bytes) -> dict[str, Any]:
             texto = pagina.extract_text() or ""
             texto_completo += texto + "\n"
 
-    # Tenta o parser de DANFE primeiro
+    # Tenta o parser de Royalties / Fundo de Marketing primeiro
+    dados_royalties = parse_royalties_pdf(texto_completo)
+    if dados_royalties:
+        return dados_royalties
+
+    # Tenta o parser de DAS do Simples Nacional
+    dados_das = parse_das_pdf(texto_completo)
+    if dados_das:
+        return dados_das
+
+    # Tenta o parser de DANFE
     dados_danfe = parse_danfe_pdf(texto_completo)
     if dados_danfe:
         return dados_danfe

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DREInput, DadosExtraidos } from "@/types/dre";
 
@@ -55,7 +55,8 @@ function Campo({
           type="number"
           step={isPercent ? "0.001" : "0.01"}
           min="0"
-          value={valor}
+          value={valor || ""}
+          placeholder="0,00"
           onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
           className={`w-full border border-gray-300 rounded-lg py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPercent ? "px-3" : "pl-8 pr-3"}`}
         />
@@ -109,6 +110,11 @@ const CATEGORIAS_RH = [
   { key: "pro_labore_operacional", label: "Pró-labore Operacional" },
 ] as const;
 
+const CATEGORIAS_ROYALTIES = [
+  { key: "royalties_frete",      label: "Royalties da Franquia" },
+  { key: "fundo_marketing_rede", label: "Fundo de Marketing da Rede" },
+] as const;
+
 export default function Home() {
   const router = useRouter();
   const [arquivos, setArquivos] = useState<File[]>([]);
@@ -117,11 +123,20 @@ export default function Home() {
   const [erro, setErro] = useState<string | null>(null);
   const [form, setForm] = useState<DREInput>(VALORES_PADRAO);
   const [modoManual, setModoManual] = useState(false);
-  const [tipoUpload, setTipoUpload] = useState<"compras" | "vendas" | "impostos" | "rh">("compras");
+  const [tipoUpload, setTipoUpload] = useState<"compras" | "vendas" | "impostos" | "rh" | "royalties">("compras");
   const [categoriaCompra, setCategoriaCompra] = useState<typeof CATEGORIAS_CMV[number]["key"]>("produtos_prontos");
   const [canalVenda, setCanalVenda] = useState<typeof CANAIS_VENDA[number]["key"]>("vendas_pix");
   const [categoriaImposto, setCategoriaImposto] = useState<typeof CATEGORIAS_IMPOSTO[number]["key"]>("simples_nacional");
   const [categoriaRH, setCategoriaRH] = useState<typeof CATEGORIAS_RH[number]["key"]>("salarios_encargos");
+  const [categoriaRoyalties, setCategoriaRoyalties] = useState<typeof CATEGORIAS_ROYALTIES[number]["key"]>("royalties_frete");
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("dreInput");
+    if (saved) {
+      setForm(JSON.parse(saved));
+      setModoManual(true);
+    }
+  }, []);
 
   const set = (key: keyof DREInput) => (v: number) =>
     setForm((prev) => ({ ...prev, [key]: v }));
@@ -186,6 +201,14 @@ export default function Home() {
         setForm((prev) => ({
           ...prev,
           [categoriaRH]: (prev[categoriaRH] as number) + valorTotal,
+        }));
+      } else if (tipoUpload === "royalties") {
+        // Boletos/faturas de royalties ou fundo de marketing da franquia
+        // Parser auto-detecta o tipo; o campo destino vem do seletor do usuário
+        const valorRoyalties = (ext[categoriaRoyalties] ?? 0) || valorTotal;
+        setForm((prev) => ({
+          ...prev,
+          [categoriaRoyalties]: (prev[categoriaRoyalties] as number) + valorRoyalties,
         }));
       }
       // Limpa a lista após processar para evitar reprocessamento ao adicionar mais documentos
@@ -296,6 +319,12 @@ export default function Home() {
               >
                 RH / Pessoal
               </button>
+              <button
+                onClick={() => setTipoUpload("royalties")}
+                className={`col-span-2 py-2.5 rounded-lg text-sm font-medium border transition-colors ${tipoUpload === "royalties" ? "bg-amber-600 text-white border-amber-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"}`}
+              >
+                Royalties / Franquia
+              </button>
             </div>
 
             {tipoUpload === "compras" && (
@@ -357,6 +386,22 @@ export default function Home() {
                   ))}
                 </select>
                 <p className="text-xs text-gray-400 mt-1">Ex: folha de pagamento, guia de FGTS, DARF do INSS, recibo de benefícios</p>
+              </div>
+            )}
+
+            {tipoUpload === "royalties" && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de encargo da franquia</label>
+                <select
+                  value={categoriaRoyalties}
+                  onChange={(e) => setCategoriaRoyalties(e.target.value as typeof categoriaRoyalties)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  {CATEGORIAS_ROYALTIES.map((c) => (
+                    <option key={c.key} value={c.key}>{c.label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">O valor é detectado automaticamente — boleto, fatura ou NFS-e da franqueadora</p>
               </div>
             )}
           </div>
