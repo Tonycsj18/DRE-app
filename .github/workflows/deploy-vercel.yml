@@ -19,8 +19,17 @@ jobs:
       - name: Instalar Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Build via Vercel CLI
-        run: vercel build --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+      - name: Criar config Vercel dentro do frontend
+        run: |
+          mkdir -p frontend/.vercel
+          echo '{"projectId":"prj_zTNXc5GEjhvVBdA2rynFEPIVkj59","orgId":"team_6CP2ACk9w25wdhYkLOel2bri","projectName":"dre-app"}' > frontend/.vercel/project.json
+
+      - name: Build via Vercel CLI (local, sem cache)
+        run: |
+          cd frontend
+          vercel build --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
 
       - name: Deploy prebuilt para produção
-        run: vercel deploy --prod --prebuilt --token ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          cd frontend
+          vercel deploy --prod --prebuilt --token ${{ secrets.VERCEL_TOKEN }} --yes
